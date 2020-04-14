@@ -1,6 +1,7 @@
 #include <iostream>
+#include <string>
+#include "lsmtree/LSMTree.h"
 
 int main() {
-    std::cout << "Hello, World!" << std::endl;
     return 0;
 }

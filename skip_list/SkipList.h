@@ -14,9 +14,10 @@
 
 template<typename K, typename V>
 class SkipList : public Dictionary<K, V> {
+protected:
     using SkipListLevel = QuadList<Entry<K, V>>;
     using LevelIter = typename std::list<SkipListLevel>::iterator;
-private:
+
     std::list<SkipListLevel> qlist;
 
     auto skipSearch(LevelIter level, K key);
@@ -33,6 +34,10 @@ public:
     V *get(K k) override;
 
     bool remove(K k) override;
+
+    [[nodiscard]] int levels() const {
+        return qlist.size();
+    }
 };
 
 template<typename K, typename V>
@@ -47,7 +52,7 @@ bool SkipList<K, V>::put(K k, V v) {
     auto curr_level = qlist.rbegin(); // If skipSearch didn't find k, it must return a appropriate position
     // at the bottom of qlist for insert a new tower of k
     auto seed = time(nullptr);
-    auto gen = std::mt19937_64{static_cast<unsigned __int64 > (seed)};
+    auto gen = std::mt19937_64{static_cast<unsigned long long> (seed)};
     auto rand = std::uniform_int_distribution<>{0, 1};
     auto new_node = curr_level->insertAfterAbove(Entry<K, V>{k, v}, pred_node);
 

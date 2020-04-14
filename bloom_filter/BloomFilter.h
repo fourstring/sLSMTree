@@ -12,11 +12,11 @@ class BloomFilter {
 private:
     vector<bool> _bits;
     vector<decltype(std::bind(MurmurHash64A, _1, _2, 10000))> _hashes;
-    int _max;
-    int _length;
+    size_t _max;
+    size_t _length;
     int _seed;
 public:
-    BloomFilter(int m, int n, int seed, int k = 4);
+    BloomFilter(size_t m, size_t n, int seed, int k = 4);
 
     auto add(const T &data);
 
@@ -26,7 +26,7 @@ public:
 };
 
 template<typename T>
-BloomFilter<T>::BloomFilter(int m, int n, int seed, int k) :_length(m), _max(n), _seed(seed) {
+BloomFilter<T>::BloomFilter(size_t m, size_t n, int seed, int k) :_length(m), _max(n), _seed(seed) {
     _bits = vector<bool>(m);
     for (int i = 0; i < k; i++) {
         _hashes.push_back(std::bind(MurmurHash64A, _1, _2, seed + i));

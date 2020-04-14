@@ -8,7 +8,7 @@
 template<typename K, typename V>
 class Dictionary {
 public:
-    [[nodiscard]] virtual int size() const = 0;
+    [[nodiscard]] virtual long long size() const = 0;
 
     virtual bool put(K, V) = 0;
 
