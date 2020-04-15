@@ -63,6 +63,8 @@ public:
     void writeToDisk(const path &&dst_file);
 
     void removeFromDisk();
+
+    path getFile();
 };
 
 

@@ -236,4 +236,8 @@ SSTable::SSTable(SSTable &&rhs) noexcept {
     rhs.index = nullptr;
 }
 
+path SSTable::getFile() {
+    return file;
+}
+
 

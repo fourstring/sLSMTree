@@ -2,6 +2,9 @@
 
 #include "kvstore_api.h"
 #include "lsmtree/LSMTree.h"
+#include <atomic>
+
+extern std::atomic<bool> gracefully_exit_flag;
 
 class KVStore : public KVStoreAPI {
     // You can add your implementation here
@@ -20,5 +23,7 @@ public:
     bool del(uint64_t key) override;
 
     void reset() override;
+
+    void check_gracefully_exit();
 
 };

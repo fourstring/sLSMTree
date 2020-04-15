@@ -141,6 +141,13 @@ DiskTableNode::DiskTableNode(DiskTableNode &&rhs) noexcept {
     rhs.index = nullptr;
 }
 
+path DiskTableNode::getFile() {
+    if (_sstable != nullptr) {
+        return _sstable->getFile();
+    }
+    return path();
+}
+
 DiskTable::QueryResult DiskTable::get(long long int key) {
     auto cur_level = diskView.begin();
     auto level_end = diskView.end();
@@ -207,13 +214,14 @@ void DiskTable::persistent(MemTable &&m, bool df) {
         auto compaction_into_level = std::next(cur_level);
         auto compaction_into_level_limit = LEVEL0_LIMIT * LEVEL_FACTOR;
         auto overflow_data = SSTableData{};
+        auto to_remove_file = std::list<path>{};
         while (true) {
             if (cur_level == diskView.begin()) {
                 auto level0_0 = cur_level->begin();
                 auto level0_1 = std::next(level0_0, 1);
                 overflow_data = merge(new_disk_node.getAllData(), level0_1->getAllData(), level0_0->getAllData());
-                level0_0->removeFromDisk();
-                level0_1->removeFromDisk();
+                to_remove_file.push_back(level0_1->getFile());
+                to_remove_file.push_back(level0_0->getFile());
                 level0->clear();
             }
 
@@ -222,7 +230,7 @@ void DiskTable::persistent(MemTable &&m, bool df) {
                 if (to_compaction_node->intersect(overflow_data)) {
                     overflow_data = merge(&overflow_data, to_compaction_node->getAllData());
                     to_compaction_node->clearDataCache();
-                    to_compaction_node->removeFromDisk();
+                    to_remove_file.push_back(to_compaction_node->getFile());
                     to_compaction_node = compaction_into_level->erase(to_compaction_node);
                     continue;
                 }
@@ -248,6 +256,7 @@ void DiskTable::persistent(MemTable &&m, bool df) {
             }
 
             if (cur_overflow_entry == overflow_end) {
+                std::for_each(to_remove_file.begin(), to_remove_file.end(), [](path &file) { remove(file); });
                 overflow_data.clear();
                 break;
             }
@@ -276,6 +285,21 @@ DiskTable::DiskTable(path &db_dir) {
      * In every sub dir, there are some SSTable, whose filename is just SSTableClock when it was written to disk,
      * such naming is for convenience of relocating SSTable in a level when compaction.
     */
+    static auto compare_dir_entry_by_numeric_asc = [](directory_entry &candidate, directory_entry &current) {
+        if (current.is_directory()) {
+            auto candidate_dir_name = --(candidate.path().end());
+            auto current_dir_name = --(current.path().end());
+            while (*candidate_dir_name == "") {
+                candidate_dir_name--;
+            }
+            while (*current_dir_name == "") {
+                current_dir_name--;
+            }
+            return atoll(candidate_dir_name->c_str()) < atoll(current_dir_name->c_str());
+        } else {
+            return atoll(candidate.path().filename().c_str()) < atoll(current.path().filename().c_str());
+        }
+    };
     db_home = db_dir;
     if (!exists(db_dir)) {
         create_directory(db_dir);
@@ -301,15 +325,15 @@ DiskTable::DiskTable(path &db_dir) {
         create_directory(db_dir / "0");
         dir_buf.emplace_back(db_dir / "0");
     }
-    std::stable_sort(dir_buf.begin(), dir_buf.end());
+    std::sort(dir_buf.begin(), dir_buf.end(), compare_dir_entry_by_numeric_asc);
     for (const auto &level:dir_buf) {
         auto new_view_level = DiskViewLevel{};
-        auto node_path_buf = std::vector<path>{};
+        auto node_path_buf = std::vector<directory_entry>{};
         for (const auto &sstable_file:directory_iterator{level.path()}) {
-            node_path_buf.push_back(sstable_file.path());
+            node_path_buf.push_back(sstable_file);
         }
         // To ensure correctness, we must enforce that sstable written later in level 0 placed into diskView[0][1](if exists)
-        std::stable_sort(node_path_buf.begin(), node_path_buf.end());
+        std::sort(node_path_buf.begin(), node_path_buf.end(), compare_dir_entry_by_numeric_asc);
         for (const auto &node_path:node_path_buf) {
             new_view_level.emplace_back(node_path);
         }

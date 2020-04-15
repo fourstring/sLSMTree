@@ -11,8 +11,11 @@ add_library(LSMTree lsmtree/LSMTree.cpp)
 add_library(DiskTable disktable/DiskTable.cpp)
 add_library(SSTable disktable/sstable/SSTable.cpp)
 add_library(KVStore kvstore.cc)
-
-link_libraries(KVStore LSMTree MemTable DiskTable SSTable MurmurHash ${ZLIB})
+link_libraries(KVStore LSMTree MemTable DiskTable SSTable MurmurHash)
+if (ZLIB)
+    add_compile_definitions(WITH_GZIP)
+    link_libraries(${ZLIB})
+endif ()
 
 add_executable(lsmtree main.cpp)
 add_executable(fs_test filesystem_test.cpp)
