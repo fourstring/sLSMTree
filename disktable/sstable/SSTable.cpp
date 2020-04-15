@@ -31,7 +31,7 @@ std::ofstream create_binary_ofstream(const path &file) {
 }
 
 size_t size_of_entry(const SSTableDataEntry &s) {
-    return sizeof(bool) + sizeof(time_t) + sizeof(long long) + sizeof(size_t) + std::strlen(s.value.c_str());
+    return sizeof(bool) + sizeof(time_t) + sizeof(long long) + sizeof(size_t) + s.value.length();
 }
 
 std::istream &operator>>(std::istream &is, SSTableDataEntry &s) {

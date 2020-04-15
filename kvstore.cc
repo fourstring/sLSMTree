@@ -18,8 +18,11 @@ KVStore::~KVStore() {
  * No return values for simplicity.
  */
 void KVStore::put(uint64_t key, const std::string &s) {
-    auto compressed = gzip::compress(s.data(), s.length());
-    lsmTree->put(key, compressed);
+    auto data = s;
+    if (s.length() >= 100) {
+        data = gzip::compress(s.data(), s.length());
+    }
+    lsmTree->put(key, data);
 }
 
 /**

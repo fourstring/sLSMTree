@@ -108,7 +108,7 @@ bool MemTable::put(long long k, std::string v) {
     }
     if (node->data.key == k && !node->data.delete_flag) {
         _size_bytes -= size_of_node(node);
-        node->data.value_length = std::strlen(v.data());
+        node->data.value_length = v.length();
         node->data.value = std::move(v);
         node->data.timestamp = timestamp;
         _size_bytes += size_of_node(node);
@@ -118,7 +118,7 @@ bool MemTable::put(long long k, std::string v) {
         // k found, but marked as deleted
         // update value, timestamp and reset delete_flag.
         _size_bytes -= size_of_node(node);
-        node->data.value_length = std::strlen(v.data());
+        node->data.value_length = v.length();
         node->data.value = std::move(v);
         node->data.timestamp = timestamp;
         _size_bytes += size_of_node(node);
@@ -168,7 +168,7 @@ size_t MemTable::size_of_node(MemTable::NodePosi node) {
     if (node == nullptr) {
         return 0;
     }
-    return sizeof(bool) + sizeof(time_t) + sizeof(long long) + sizeof(size_t) + std::strlen(node->data.value.c_str());
+    return sizeof(bool) + sizeof(time_t) + sizeof(long long) + sizeof(size_t) + node->data.value.length();
 }
 
 SSTableData MemTable::collectData() {

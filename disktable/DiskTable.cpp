@@ -229,13 +229,16 @@ void DiskTable::persistent(MemTable &&m, bool df) {
                 to_compaction_node++;
             }
 
-            while (compaction_into_level->size() < compaction_into_level_limit && !overflow_data.empty()) {
+            auto cur_overflow_entry = overflow_data.begin();
+            auto overflow_end = overflow_data.end();
+
+            while (compaction_into_level->size() < compaction_into_level_limit && cur_overflow_entry != overflow_end) {
                 auto persistent_data_block = SSTableData{};
                 volatile size_t blocked_data_bytes = 0;
-                while (blocked_data_bytes <= SSTABLE_SIZE_LIMIT && !overflow_data.empty()) {
-                    blocked_data_bytes += size_of_entry(*overflow_data.begin());
-                    persistent_data_block.push_back(*overflow_data.begin());
-                    overflow_data.erase(overflow_data.begin());
+                while (blocked_data_bytes <= SSTABLE_SIZE_LIMIT && cur_overflow_entry != overflow_end) {
+                    blocked_data_bytes += size_of_entry(*cur_overflow_entry);
+                    persistent_data_block.push_back(*cur_overflow_entry);
+                    cur_overflow_entry++;
                 }
                 auto persistent_node = DiskTableNode{};
                 persistent_node.fillData(std::move(persistent_data_block));
@@ -244,7 +247,8 @@ void DiskTable::persistent(MemTable &&m, bool df) {
                 compaction_into_level->push_back(std::move(persistent_node));
             }
 
-            if (overflow_data.empty()) {
+            if (cur_overflow_entry == overflow_end) {
+                overflow_data.clear();
                 break;
             }
 
