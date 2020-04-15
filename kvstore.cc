@@ -12,6 +12,7 @@ KVStore::KVStore(const std::string &dir) : KVStoreAPI(dir) {
     auto data_dir = path(dir);
     lsmTree = new LSMTree{data_dir};
     std::signal(SIGINT, [](int sig) { gracefully_exit_flag.store(true); });
+    std::signal(SIGTERM, [](int sig) { gracefully_exit_flag.store(true); });
 }
 
 KVStore::~KVStore() {
