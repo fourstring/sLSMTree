@@ -10,7 +10,6 @@
 #include <vector>
 #include <filesystem>
 #include <exception>
-#include <cstring>
 #include <algorithm>
 
 using namespace std::filesystem;

@@ -7,7 +7,7 @@
 
 template<>
 long long int bytes_write<std::string>(std::ostream &os, const std::string *src, long long int count) {
-    long long bytes = std::strlen(src->c_str());
+    long long bytes = src->length();
     os << *src;
     return bytes;
 }

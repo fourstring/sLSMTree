@@ -4,7 +4,7 @@
 
 #include "test.h"
 
-class CorrectnessTest : public Test {
+class PerformanceTest : public Test {
 private:
     const uint64_t SIMPLE_TEST_MAX = 512;
     const uint64_t LARGE_TEST_MAX = 1024 * 128;
@@ -55,7 +55,7 @@ private:
     }
 
 public:
-    CorrectnessTest(const std::string &dir, bool v = true) : Test(dir, v) {
+    PerformanceTest(const std::string &dir, bool v = true) : Test(dir, v) {
     }
 
     void start_test(void *args = NULL) override {
@@ -78,7 +78,7 @@ int main(int argc, char *argv[]) {
     std::cout << std::endl;
     std::cout.flush();
 
-    CorrectnessTest test("./data", verbose);
+    PerformanceTest test("./data", verbose);
 
     test.start_test();
 

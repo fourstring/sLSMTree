@@ -1,8 +1,14 @@
 #include "kvstore.h"
 #include <string>
+
+#ifdef WITH_GZIP
+
 #include <gzip/compress.hpp>
 #include <gzip/decompress.hpp>
 #include <gzip/utils.hpp>
+
+#endif
+
 #include <csignal>
 #include <atomic>
 
@@ -26,11 +32,14 @@ KVStore::~KVStore() {
 void KVStore::put(uint64_t key, const std::string &s) {
     check_gracefully_exit();
 #ifdef WITH_GZIP
-    auto data = s;
+    auto data = std::string{};
     if (s.length() >= 100) {
         data = gzip::compress(s.data(), s.length());
+        lsmTree->put(key, data);
+    } else {
+        lsmTree->put(key, s);
     }
-    lsmTree->put(key, data);
+
 #else
     lsmTree->put(key,s);
 #endif
